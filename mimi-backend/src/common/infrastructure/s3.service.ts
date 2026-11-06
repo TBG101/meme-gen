@@ -6,11 +6,14 @@ import {
 
 @Injectable()
 export class S3Service {
-    private endpoint = process.env.AWS_ENDPOINT_URL;
+    private region = process.env.AWS_REGION ?? 'us-east-1';
+    private endpoint =
+        process.env.AWS_ENDPOINT_URL ??
+        `https://s3.${this.region}.amazonaws.com`;
     private s3 = new S3Client({
-        region: process.env.AWS_REGION,
+        region: this.region,
         endpoint: this.endpoint,
-        forcePathStyle: Boolean(this.endpoint),
+        forcePathStyle: Boolean(process.env.AWS_ENDPOINT_URL),
         credentials: {
             accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
             secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,

@@ -26,15 +26,15 @@ services:
       PORT: 3000
       DATABASE_URL: postgres://mimi:mimi@postgres:5432/mimi
       AWS_REGION: us-east-1
-      AWS_ACCESS_KEY_ID: minioadmin
-      AWS_SECRET_ACCESS_KEY: minioadmin
+      AWS_ACCESS_KEY_ID: mimi-local-access
+      AWS_SECRET_ACCESS_KEY: mimi-local-secret
       AWS_S3_BUCKET: mimi-images
-      AWS_ENDPOINT_URL: http://minio:9000
+      AWS_ENDPOINT_URL: http://rustfs:9000
       AWS_PUBLIC_URL: http://localhost:9000
     depends_on:
       postgres:
         condition: service_healthy
-      minio-init:
+      rustfs-init:
         condition: service_completed_successfully
 
   postgres:
@@ -53,29 +53,41 @@ services:
       timeout: 5s
       retries: 10
 
-  minio:
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
+  rustfs:
+    image: rustfs/rustfs:latest
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      RUSTFS_ACCESS_KEY: mimi-local-access
+      RUSTFS_SECRET_KEY: mimi-local-secret
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
+    command: ["/data"]
     ports:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - minio_data:/data
+      - rustfs_data:/data
 
-  minio-init:
-    image: minio/mc:latest
+  rustfs-init:
+    image: amazon/aws-cli:latest
     depends_on:
-      - minio
-    entrypoint: /bin/sh
+      - rustfs
+    environment:
+      AWS_ACCESS_KEY_ID: mimi-local-access
+      AWS_SECRET_ACCESS_KEY: mimi-local-secret
+      AWS_DEFAULT_REGION: us-east-1
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      - -c
-      - until mc alias set local http://minio:9000 minioadmin minioadmin; do sleep 1; done && mc mb --ignore-existing local/mimi-images && mc anonymous set download local/mimi-images
+      - >-
+        until aws --endpoint-url http://rustfs:9000 s3api list-buckets >/dev/null 2>&1; do sleep 1; done;
+        if ! aws --endpoint-url http://rustfs:9000 s3api head-bucket --bucket mimi-images >/dev/null 2>&1; then
+        aws --endpoint-url http://rustfs:9000 s3api create-bucket --bucket mimi-images;
+        fi;
+        aws --endpoint-url http://rustfs:9000 s3api put-bucket-policy --bucket mimi-images --policy
+        '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":"*","Action":"s3:GetObject","Resource":"arn:aws:s3:::mimi-images/*"}]}'
 
 volumes:
   backend_node_modules:
   frontend_node_modules:
   postgres_data:
-  minio_data:
+  rustfs_data:
