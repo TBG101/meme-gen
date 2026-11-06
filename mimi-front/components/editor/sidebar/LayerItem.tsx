@@ -40,18 +40,17 @@ export default function LayerItem({
     setFontSize(String(layer.fontSize));
   }, [layer.fontSize]);
 
-  const commitFontSize = () => {
-    const value = Number(fontSize);
+  const commitFontSize = (input: any) => {
+    const raw = input.target.value;
+    if (raw.trim() === "") return;
 
-    if (!Number.isFinite(value) || fontSize.trim() === "") {
-      setFontSize(String(layer.fontSize));
-      return;
+    const value = Number(raw);
+    if (!Number.isFinite(value)) return;
+    setFontSize(raw);
+
+    if (value >= 8 && value <= 200) {
+      onUpdateStyle({ fontSize: value });
     }
-
-    const clamped = Math.min(200, Math.max(8, value));
-
-    setFontSize(String(clamped));
-    onUpdateStyle({ fontSize: clamped });
   };
 
   return (
@@ -134,7 +133,7 @@ export default function LayerItem({
               min={8}
               max={200}
               value={fontSize}
-              onChange={(e) => setFontSize(e.target.value)}
+              onChange={commitFontSize}
               onBlur={commitFontSize}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {

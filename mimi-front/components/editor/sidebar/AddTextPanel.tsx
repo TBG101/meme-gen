@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function AddTextPanel({
   addNewText,
@@ -9,6 +9,25 @@ export default function AddTextPanel({
     fontSize: 14,
     color: "#000",
   });
+
+  const commitFontSize = (input: any) => {
+    const raw = input.target.value;
+    if (raw.trim() === "") return;
+
+    const value = Number(raw);
+    if (!Number.isFinite(value)) return;
+    setNewText({
+      ...newText,
+      fontSize: raw,
+    });
+
+    if (value >= 8 && value <= 200) {
+      setNewText({
+        ...newText,
+        fontSize: raw,
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-2 p-5 border-b border-border">
@@ -28,12 +47,8 @@ export default function AddTextPanel({
               min={8}
               max={200}
               step={1}
-              onChange={(event) =>
-                setNewText({
-                  ...newText,
-                  fontSize: Number(event.target.value),
-                })
-              }
+              onChange={commitFontSize}
+              onBlur={commitFontSize}
               value={newText.fontSize}
               className="w-full border-0 bg-transparent px-3 py-2 text-sm text-foreground outline-none"
             />
