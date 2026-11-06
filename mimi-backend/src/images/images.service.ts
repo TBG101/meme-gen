@@ -3,10 +3,8 @@ import { CreateImageDto } from './dto/create-image.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Image } from './entities/image.entity';
 import { Repository } from 'typeorm';
-import { join } from 'path';
-import { mkdir, mkdirSync, writeFile, writeFileSync } from 'fs';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
-import { S3Service } from 'src/common/infrastructure/s3.service';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
+import { S3Service } from '../common/infrastructure/s3.service';
 import sharp from 'sharp';
 import { FindAllImagesResponseDto } from './dto/find-all-response.dto';
 
