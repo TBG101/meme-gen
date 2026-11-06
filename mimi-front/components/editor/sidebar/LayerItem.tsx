@@ -7,6 +7,7 @@ import {
   Trash,
 } from "lucide-react";
 import { TextObject } from "@/types/editor";
+import { useState, useEffect } from "react";
 
 type LayerItemProps = {
   layer: TextObject;
@@ -33,6 +34,26 @@ export default function LayerItem({
   onHover,
   onUpdateStyle,
 }: LayerItemProps) {
+  const [fontSize, setFontSize] = useState(String(layer.fontSize));
+
+  useEffect(() => {
+    setFontSize(String(layer.fontSize));
+  }, [layer.fontSize]);
+
+  const commitFontSize = () => {
+    const value = Number(fontSize);
+
+    if (!Number.isFinite(value) || fontSize.trim() === "") {
+      setFontSize(String(layer.fontSize));
+      return;
+    }
+
+    const clamped = Math.min(200, Math.max(8, value));
+
+    setFontSize(String(clamped));
+    onUpdateStyle({ fontSize: clamped });
+  };
+
   return (
     <li
       className="group rounded-lg border border-border bg-background px-3 py-2 text-sm transition-colors hover:bg-surface-hover"
@@ -80,14 +101,19 @@ export default function LayerItem({
 
       {isExpanded && (
         <div className="mt-3 grid grid-cols-[1fr_auto] items-center gap-2 border-t border-border pt-3">
-          <label className="text-xs text-muted" htmlFor={`font-family-${index}`}>
+          <label
+            className="text-xs text-muted"
+            htmlFor={`font-family-${index}`}
+          >
             Font
           </label>
           <select
             id={`font-family-${index}`}
             value={layer.fontFamily ?? "Arial"}
             className="input w-36 py-1 text-xs"
-            onChange={(event) => onUpdateStyle({ fontFamily: event.target.value })}
+            onChange={(event) =>
+              onUpdateStyle({ fontFamily: event.target.value })
+            }
           >
             {["Arial", "Georgia", "Impact", "Courier New", "Verdana"].map(
               (font) => (
@@ -101,19 +127,21 @@ export default function LayerItem({
           <label className="text-xs text-muted" htmlFor={`font-size-${index}`}>
             Size
           </label>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <input
               id={`font-size-${index}`}
               type="number"
               min={8}
               max={200}
-              value={layer.fontSize}
-              className="input w-20 py-1 text-xs"
-              onChange={(event) => {
-                const fontSize = Number(event.target.value);
-                if (!Number.isFinite(fontSize)) return;
-                onUpdateStyle({ fontSize: Math.min(200, Math.max(8, fontSize)) });
+              value={fontSize}
+              onChange={(e) => setFontSize(e.target.value)}
+              onBlur={commitFontSize}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.currentTarget.blur();
+                }
               }}
+              className="input w-16 py-1 text-xs text-center tabular-nums"
             />
             <span className="text-xs text-muted">px</span>
           </div>
