@@ -6,8 +6,11 @@ import {
 
 @Injectable()
 export class S3Service {
+    private endpoint = process.env.AWS_ENDPOINT_URL;
     private s3 = new S3Client({
         region: process.env.AWS_REGION,
+        endpoint: this.endpoint,
+        forcePathStyle: Boolean(this.endpoint),
         credentials: {
             accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
             secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
@@ -26,7 +29,10 @@ export class S3Service {
             }),
         );
 
-        const url = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+        const bucket = process.env.AWS_S3_BUCKET;
+        const url = process.env.AWS_PUBLIC_URL
+            ? `${process.env.AWS_PUBLIC_URL.replace(/\/$/, '')}/${bucket}/${key}`
+            : `https://${bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
 
         return { key, url };
     }

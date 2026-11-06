@@ -18,6 +18,12 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
+        protocol: "http",
+        hostname: "localhost",
+        port: "9000",
+        pathname: "/mimi-images/images/**",
+      },
+      {
         protocol: "https",
         hostname: "supinfo-demo.s3.eu-north-1.amazonaws.com",
         pathname: "/images/**",
